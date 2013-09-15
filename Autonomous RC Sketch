@@ -1,0 +1,183 @@
+#include <Servo.h>
+Servo myservo;  // create servo object to control a servo
+
+//setting servo bounds
+int look_straight = 45;
+int look_left = 90;
+int look_right = 0;
+
+// declaring functions
+int ping_left(int look_left, int look_straight);
+int ping_right(int look_right, int look_straight);
+void forward();
+void backward();
+void left();
+void right();
+void halt();
+
+//assigning pin 5 to pin sensor
+const int pingPin = 5;// setup for ping
+
+// intinalizing motors on shield
+int pinI1=8;//define I1 interface
+int pinI2=11;//define I2 interface 
+int speedpinA=9;//enable motor A
+int pinI3=12;//define I3 interface 
+int pinI4=13;//define I4 interface 
+int speedpinB=10;//enable motor B
+int spead =180;//define the spead of motor
+int speada =60;//define the spead of motor
+ 
+void setup()
+{
+  pinMode(pinI1,OUTPUT);
+  pinMode(pinI2,OUTPUT);
+  pinMode(speedpinA,OUTPUT);
+  pinMode(pinI3,OUTPUT);
+  pinMode(pinI4,OUTPUT);
+  pinMode(speedpinB,OUTPUT);
+  
+  Serial.begin(9600);
+  myservo.attach(52);  // attaches the servo on pin 3 to the servo object
+}
+
+// functions for motor control_________________________________________________________________________________________
+void forward()
+{
+     //analogWrite(speedpinA,spead);//input a simulation value to set the speed
+     analogWrite(speedpinB,speada);
+     digitalWrite(pinI4,LOW);//turn rear tires forward
+     digitalWrite(pinI3,HIGH);
+}
+
+void left()//
+{
+     analogWrite(speedpinA,spead);//input a simulation value to set the speed
+     analogWrite(speedpinB,spead);
+     digitalWrite(pinI2,LOW);// turn front tires right
+     digitalWrite(pinI1,HIGH);
+     digitalWrite(pinI4,HIGH);//turn rear tires backward
+     digitalWrite(pinI3,LOW);
+     delay(1000);
+     digitalWrite(pinI2,HIGH);// turn front tires left
+     digitalWrite(pinI1,LOW);
+     digitalWrite(pinI4,LOW);//  turn rear tires forward
+     digitalWrite(pinI3,HIGH);
+     delay(1000);
+     
+}
+void right()//
+{
+     analogWrite(speedpinA,spead);//input a simulation value to set the speed
+     analogWrite(speedpinB,spead);
+     digitalWrite(pinI2,HIGH);// turn front tires left
+     digitalWrite(pinI1,LOW);
+     digitalWrite(pinI4,HIGH);//turn rear tires backward
+     digitalWrite(pinI3,LOW);
+     delay(1000);     
+     digitalWrite(pinI2,LOW);//turn front tires right
+     digitalWrite(pinI1,HIGH);
+     digitalWrite(pinI4,LOW);//  turn rear tires forward
+     digitalWrite(pinI3,HIGH);
+     delay(1000);
+}
+void stop()//
+{
+     digitalWrite(speedpinA,LOW);// Unenble the pin, to stop the motor. this should be done to avoid damaging the motor. 
+     digitalWrite(speedpinB,LOW);
+     delay(300);
+ 
+}
+
+void loop()///_____________________________________________________
+{
+  int stop_distance=2500;
+  int left_distance, right_distance;
+  int cm = ping(pingPin) ; 
+  
+  Serial.println(cm);
+ 
+  if (cm>stop_distance)
+    {
+      
+     cm = ping(pingPin);
+     delay(30); 
+    }
+  else if (cm<stop_distance)
+    {
+    stop();
+    delay(2000);
+    Serial.print("stop distance ");
+    Serial.println(cm);
+    int left_distance = ping_left(look_left, look_straight);
+    Serial.println(left_distance);
+    int right_distance = ping_right(look_right, look_straight);
+    Serial.println(right_distance);  
+     
+          if (left_distance < right_distance)
+               {
+               Serial.print("choose right distance ");
+               Serial.println(right_distance); 
+               stop(); 
+               right();
+               stop();                
+               forward();                                      
+               } 
+        
+          else if (left_distance > right_distance)
+               {
+                Serial.print("choose left distance ");
+                Serial.println(left_distance);
+                stop(); 
+                left();
+                stop();                 
+                forward();                                              
+                
+     }
+      delay(200);
+    }
+   
+  }
+  
+
+int ping(int pingPin)//   the ping function ---------------------------------------------
+{
+  long duration, cm;
+  pinMode(pingPin, OUTPUT);
+  digitalWrite(pingPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pingPin, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(pingPin, LOW);
+  pinMode(pingPin, INPUT);
+  cm = pulseIn(pingPin, HIGH);
+  return cm ;
+}
+
+
+ int ping_left(int look_left, int look_straight)//  function for servo spin for the ping---------------
+{
+  int left_distance;
+  myservo.write(look_left);
+  delay (500);
+  left_distance = ping(pingPin) ; 
+  Serial.print("left distance ");
+  Serial.println(left_distance);
+  
+  myservo.write(look_straight);
+  delay (500);
+  return left_distance;
+}
+
+int ping_right(int look_right, int look_straight)//  function for servo spin for the ping---------------
+{
+  int right_distance;
+  myservo.write(look_right);
+  delay (500);
+  right_distance = ping(pingPin) ;
+  Serial.print("right distance "); 
+  Serial.println(right_distance);
+  myservo.write(look_straight);
+  delay (500);
+  return right_distance;
+}
